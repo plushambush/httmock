@@ -22,7 +22,7 @@ Source0: %{pkgname}-%{version}.tar.gz
 
 Requires: python-requests >= 1.0.0
 BuildRequires: python-requests >= 1.0.0
-BuildRequires: python-nose%{nose_version}
+BuildRequires: python-nose%{nose_version}, python2-devel
 
 BuildArch: noarch
 
