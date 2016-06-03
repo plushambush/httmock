@@ -13,7 +13,7 @@
 Name: python-%{pkgname}
 Summary: A mocking library for requests
 Version: 1.2.3
-Release: 1%{?dist}
+Release: 2%{?dist}
 License: Apache License, Version 2.0
 
 Group: Development/Testing
@@ -50,6 +50,9 @@ rm -rf %{buildroot}
 %doc README.md LICENSE
 
 %changelog
+* Fri Jun 03 2016 Vladislav Odintsov <odivlad@gmail.com> 1.2.3-2
+- Fix build for el7 distros
+
 * Mon Mar 16 2015 Mikhail Ushanov <gm.mephisto@gmail.com> 1.2.3-1
 - Update version.
 
