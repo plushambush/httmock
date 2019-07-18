@@ -28,8 +28,8 @@
 
 Name: python-%{pkgname}
 Summary: %{sum}
-Version: 1.2.3
-Release: 3%{?dist}
+Version: 1.3.0
+Release: 1%{?dist}
 License: Apache License, Version 2.0
 
 Group: Development/Testing
@@ -117,6 +117,9 @@ rm -rf %{buildroot}
 %endif
 
 %changelog
+* Thu Jul 18 2019 Vladislav Odintsov <odivlad@gmail.com> 1.3.0-1
+- Update with upstream version 1.3.0
+
 * Thu Jun 27 2019 Vladislav Odintsov <odivlad@gmail.com> 1.2.3-3
 - Add support for py2/py3.x build
 
