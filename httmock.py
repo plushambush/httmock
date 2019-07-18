@@ -4,7 +4,7 @@ from requests import cookies
 import json
 import re
 import requests
-from requests import structures
+from requests import structures, utils
 import sys
 try:
     import urlparse
@@ -12,7 +12,19 @@ except ImportError:
     import urllib.parse as urlparse
 
 if sys.version_info >= (3, 0, 0):
-    basestring = str
+    from io import BytesIO
+else:
+    try:
+        from cStringIO import StringIO as BytesIO
+    except ImportError:
+        from StringIO import StringIO as BytesIO
+
+
+binary_type = bytes
+if sys.version_info >= (3, 0, 0):
+    text_type = str
+else:
+    text_type = unicode  # noqa
 
 
 class Headers(object):
@@ -27,17 +39,17 @@ class Headers(object):
 
 
 def response(status_code=200, content='', headers=None, reason=None, elapsed=0,
-             request=None):
+             request=None, stream=False):
     res = requests.Response()
     res.status_code = status_code
-    if isinstance(content, dict):
-        if sys.version_info[0] == 3:
-            content = bytes(json.dumps(content), 'utf-8')
-        else:
-            content = json.dumps(content)
+    if isinstance(content, (dict, list)):
+        content = json.dumps(content).encode('utf-8')
+    if isinstance(content, text_type):
+        content = content.encode('utf-8')
     res._content = content
     res._content_consumed = content
     res.headers = structures.CaseInsensitiveDict(headers or {})
+    res.encoding = utils.get_encoding_from_headers(res.headers)
     res.reason = reason
     res.elapsed = datetime.timedelta(elapsed)
     res.request = request
@@ -48,6 +60,10 @@ def response(status_code=200, content='', headers=None, reason=None, elapsed=0,
     if 'set-cookie' in res.headers:
         res.cookies.extract_cookies(cookies.MockResponse(Headers(res)),
                                     cookies.MockRequest(request))
+    if stream:
+        res.raw = BytesIO(content)
+    else:
+        res.raw = BytesIO(b'')
 
     # normally this closes the underlying connection,
     #  but we have nothing to free.
@@ -88,6 +104,40 @@ def urlmatch(scheme=None, netloc=None, path=None, method=None, query=None):
     return decorator
 
 
+def handler_init_call(handler):
+    setattr(handler, 'call', {
+        'count': 0,
+        'called': False,
+        'requests': []
+    })
+
+
+def handler_clean_call(handler):
+    if hasattr(handler, 'call'):
+        handler.call.update({
+            'count': 0,
+            'called': False,
+            'requests': []
+        })
+
+
+def handler_called(handler, *args, **kwargs):
+    try:
+        return handler(*args, **kwargs)
+    finally:
+        handler.call['count'] += 1
+        handler.call['called'] = True
+        handler.call['requests'].append(args[1])
+
+def remember_called(func):
+    handler_init_call(func)
+
+    @wraps(func)
+    def inner(*args, **kwargs):
+        return handler_called(func, *args, **kwargs)
+    return inner
+
+
 def first_of(handlers, *args, **kwargs):
     for handler in handlers:
         res = handler(*args, **kwargs)
@@ -108,8 +158,12 @@ class HTTMock(object):
         self._real_session_send = requests.Session.send
         self._real_session_prepare_request = requests.Session.prepare_request
 
+        for handler in self.handlers:
+            handler_clean_call(handler)
+
         def _fake_send(session, request, **kwargs):
-            response = self.intercept(request)
+            response = self.intercept(request, **kwargs)
+
             if isinstance(response, requests.Response):
                 # this is pasted from requests to handle redirects properly:
                 kwargs.setdefault('stream', session.stream)
@@ -139,6 +193,9 @@ class HTTMock(object):
                     history.insert(0, response)
                     response = history.pop()
                     response.history = tuple(history)
+
+                session.cookies = response.cookies
+
                 return response
 
             return self._real_session_send(session, request, **kwargs)
@@ -161,9 +218,10 @@ class HTTMock(object):
         requests.Session.send = self._real_session_send
         requests.Session.prepare_request = self._real_session_prepare_request
 
-    def intercept(self, request):
+    def intercept(self, request, **kwargs):
         url = urlparse.urlsplit(request.url)
         res = first_of(self.handlers, url, request)
+
         if isinstance(res, requests.Response):
             return res
         elif isinstance(res, dict):
@@ -172,9 +230,10 @@ class HTTMock(object):
                             res.get('headers'),
                             res.get('reason'),
                             res.get('elapsed', 0),
-                            request)
-        elif isinstance(res, basestring):
-            return response(content=res)
+                            request,
+                            stream=kwargs.get('stream', False))
+        elif isinstance(res, (text_type, binary_type)):
+            return response(content=res, stream=kwargs.get('stream', False))
         elif res is None:
             return None
         else:

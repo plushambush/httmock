@@ -11,7 +11,7 @@ DESCRIPTION = open(
 
 setup(
     name='httmock',
-    version='1.2.3',
+    version='1.3.0',
     description='A mocking library for requests.',
     author='Patryk Zawadzki',
     author_email='patrys@room-303.com',
@@ -19,7 +19,8 @@ setup(
     py_modules=['httmock'],
     keywords=['requests', 'testing', 'mock'],
     classifiers=[
-        'Programming Language :: Python',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 3',
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Testing',
         'Operating System :: OS Independent'],
