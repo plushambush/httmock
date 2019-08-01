@@ -29,7 +29,7 @@
 Name: python-%{pkgname}
 Summary: %{sum}
 Version: 1.3.0
-Release: 1%{?dist}
+Release: 2%{?dist}
 License: Apache License, Version 2.0
 
 Group: Development/Testing
@@ -117,6 +117,9 @@ rm -rf %{buildroot}
 %endif
 
 %changelog
+* Thu Aug 1  2019 Vladislav Odintsov <odivlad@gmail.com> 1.3.0-2
+- Update with upstream patches #58
+
 * Thu Jul 18 2019 Vladislav Odintsov <odivlad@gmail.com> 1.3.0-1
 - Update with upstream version 1.3.0
 
