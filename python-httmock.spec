@@ -35,7 +35,7 @@
 Name: python-%{pkgname}
 Summary: %{sum}
 Version: 1.3.0
-Release: 2.CROC1%{?dist}
+Release: 2.CROC3%{?dist}
 License: Apache License, Version 2.0
 
 Group: Development/Testing
@@ -138,6 +138,10 @@ rm -rf %{buildroot}
 %endif
 
 %changelog
+* Tue Nov 1 2022 Ivan Konov <ikonov@croc.ru> 1.3.0-2.CROC3
+- Fix package names for py3 builds
+- Do not build for py2 on rhel8+
+
 * Thu Aug 1  2019 Vladislav Odintsov <odivlad@gmail.com> 1.3.0-2
 - Update with upstream patches #58
 
