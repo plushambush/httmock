@@ -65,13 +65,17 @@ Obsoletes:     python-httmock < 1.2.3-3%{?dist}
 %package -n python%{python3_pkgversion}-%{pkgname}
 Summary:       %{sum}
 %if 0%{?rhel} && 0%{?rhel} >=8
-Requires:      python%{python3_pkgversion}-requests >= 1.0.0
+Requires:      python3-requests >= 1.0.0
 %else
 Requires:      python36-requests >= 1.0.0
 %endif
 BuildRequires: python%{python3_pkgversion}-devel
 BuildRequires: python%{python3_pkgversion}-requests >= 1.0.0
+%if 0%{?rhel} && 0%{?rhel} >=8
+BuildRequires: python3-nose%{nose_version}
+%else
 BuildRequires: python36-nose%{nose_version}
+%endif
 
 %description -n python%{python3_pkgversion}-%{pkgname}
 %{descr}
