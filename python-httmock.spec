@@ -17,6 +17,12 @@
 %{!?py2_install: %global py2_install %py_install}
 %endif
 
+%if 0%{?rhel} && 0%{?rhel} >=8
+%bcond_with python2
+%else
+%bcond_without python2
+%endif
+
 %define pkgname httmock
 %global sum A mocking library for requests
 %global descr A mocking library for `requests` for Python 2.6, 2.7 and 3.2, 3.3.
@@ -42,7 +48,7 @@ BuildArch: noarch
 %description
 %{descr}
 
-
+%if %{with python2}
 %package -n python2-%{pkgname}
 Summary:       %{sum}
 Requires:      python-requests >= 1.0.0
@@ -53,7 +59,7 @@ Obsoletes:     python-httmock < 1.2.3-3%{?dist}
 
 %description -n python2-%{pkgname}
 %{descr}
-
+%endif
 
 %if %{with python3}
 %package -n python%{python3_pkgversion}-%{pkgname}
@@ -73,7 +79,9 @@ BuildRequires: python36-nose%{nose_version}
 
 
 %build
+%if %{with python2}
 %py2_build
+%endif
 
 %if %{with python3}
 %py3_build
@@ -81,7 +89,9 @@ BuildRequires: python36-nose%{nose_version}
 
 
 %check
+%if %{with python2}
 nosetests%{nose_version} -v
+%endif
 
 %if %{with python3}
 nosetests%{nose_version}-%{python3_version} -v
@@ -91,7 +101,9 @@ nosetests%{nose_version}-%{python3_version} -v
 %install
 [ %buildroot = "/" ] || rm -rf %buildroot
 
+%if %{with python2}
 %py2_install
+%endif
 
 %if %{with python3}
 %py3_install
@@ -101,12 +113,13 @@ nosetests%{nose_version}-%{python3_version} -v
 %clean
 rm -rf %{buildroot}
 
-
+%if %{with python2}
 %files -n python2-%{pkgname}
 %defattr(-,root,root,-)
 %{python2_sitelib}/*
 
 %doc README.md LICENSE
+%endif
 
 %if %{with python3}
 %files -n python%{python3_pkgversion}-%{pkgname}
