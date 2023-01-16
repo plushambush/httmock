@@ -1,36 +1,14 @@
-%if 0%{?rhel} && 0%{?rhel} <= 6
-%{!?__python2: %global __python2 /usr/bin/python2}
-%{!?python2_sitelib: %global python2_sitelib %(%{__python2} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")}
-%endif
-
 %global dist_raw %(%{__grep} -oP "release \\K[0-9]+\\.[0-9]+" /etc/system-release | tr -d ".")
 
-%if 0%{?fedora} > 12 || 0%{?rhel} && 0%{?dist_raw} >= 75
-%bcond_without python3
+%if 0%{?el8}
+%global el_python3_pkgversion 3
 %else
-%bcond_with python3
-%endif
-
-# centos 7.2 and lower versions don't have %py2_* macros, so define it manually
-%if 0%{?rhel} && 0%{?dist_raw} <= 72
-%{!?py2_build: %global py2_build %py_build}
-%{!?py2_install: %global py2_install %py_install}
-%endif
-
-%if 0%{?rhel} && 0%{?rhel} >=8
-%bcond_with python2
-%else
-%bcond_without python2
+%global el_python3_pkgversion 36
 %endif
 
 %define pkgname httmock
 %global sum A mocking library for requests
-%global descr A mocking library for `requests` for Python 2.6, 2.7 and 3.2, 3.3.
-
-%define nose_version %nil
-%if 0%{?rhel} <= 6
-%define nose_version 1.1
-%endif
+%global descr A mocking library for `requests` for Python.
 
 Name: python-%{pkgname}
 Summary: %{sum}
@@ -42,105 +20,48 @@ Group: Development/Testing
 URL: https://github.com/patrys/httmock
 Source0: %{pkgname}-%{version}.tar.gz
 
-
 BuildArch: noarch
 
 %description
 %{descr}
 
-%if %{with python2}
-%package -n python2-%{pkgname}
-Summary:       %{sum}
-Requires:      python-requests >= 1.0.0
-BuildRequires: python2-devel
-BuildRequires: python-requests >= 1.0.0
-BuildRequires: python-nose%{nose_version}
-Obsoletes:     python-httmock < 1.2.3-3%{?dist}
-
-%description -n python2-%{pkgname}
-%{descr}
-%endif
-
-%if %{with python3}
 %package -n python%{python3_pkgversion}-%{pkgname}
 Summary:       %{sum}
-%if 0%{?rhel} && 0%{?rhel} >=8
-Requires:      python3-requests >= 1.0.0
-%else
-Requires:      python36-requests >= 1.0.0
-%endif
+Requires:      python%{el_python3_pkgversion}-requests >= 1.0.0
 BuildRequires: python%{python3_pkgversion}-devel
 BuildRequires: python%{python3_pkgversion}-requests >= 1.0.0
-%if 0%{?rhel} && 0%{?rhel} >=8
-BuildRequires: python3-nose%{nose_version}
-%else
-BuildRequires: python36-nose%{nose_version}
-%endif
+BuildRequires: python%{el_python3_pkgversion}-nose
 
 %description -n python%{python3_pkgversion}-%{pkgname}
 %{descr}
-%endif
-
 
 %prep
 %setup -q -n %{pkgname}-%{version}
 
-
 %build
-%if %{with python2}
-%py2_build
-%endif
-
-%if %{with python3}
 %py3_build
-%endif
-
 
 %check
-%if %{with python2}
-nosetests%{nose_version} -v
-%endif
-
-%if %{with python3}
-nosetests%{nose_version}-%{python3_version} -v
-%endif
-
+nosetests-%{python3_version} -v
 
 %install
 [ %buildroot = "/" ] || rm -rf %buildroot
 
-%if %{with python2}
-%py2_install
-%endif
-
-%if %{with python3}
 %py3_install
-%endif
-
 
 %clean
 rm -rf %{buildroot}
 
-%if %{with python2}
-%files -n python2-%{pkgname}
-%defattr(-,root,root,-)
-%{python2_sitelib}/*
-
-%doc README.md LICENSE
-%endif
-
-%if %{with python3}
 %files -n python%{python3_pkgversion}-%{pkgname}
 %defattr(-,root,root,-)
 %{python3_sitelib}/*
 
 %doc README.md LICENSE
-%endif
 
 %changelog
-* Tue Nov 1 2022 Ivan Konov <ikonov@croc.ru> 1.3.0-2.CROC3
+* Mon Jan 16 2023 Ivan Konov <ikonov@croc.ru> 1.3.0-2.CROC3
 - Fix package names for py3 builds
-- Do not build for py2 on rhel8+
+- Remove py2 support
 
 * Thu Aug 1  2019 Vladislav Odintsov <odivlad@gmail.com> 1.3.0-2
 - Update with upstream patches #58
